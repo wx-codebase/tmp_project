@@ -1,0 +1,95 @@
+<html>
+<head>
+    <title>HP</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+    <script src="https://unpkg.com/vue-router@2.0.0"></script>
+</head>
+<body>
+
+<div id="app">
+    <div class="text-center">
+        <router-view v-on:auth-verified="setAuthStatus"></router-view>
+    </div>
+</div>
+
+
+<script src="./js/components/access.vue.js"></script>
+<script src="./js/components/admin.vue.js"></script>
+<script src="./js/components/user.vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<script>
+
+    Vue.config.devtools = true;
+    Vue.component("Access", Access);
+    Vue.component("Admin");
+
+    const routes = [
+        {
+            path: "/",
+            component: Access,
+            name: 'access'
+        },
+        {
+            path: "/admin",
+            component: Admin,
+            name: 'admin'
+        },
+        {
+            path: "/user",
+            component: User,
+            name: 'user'
+        },
+    ];
+
+    const router = new VueRouter({
+        routes: routes,
+        mode: "history",
+        base: "/",
+    });
+
+    var app = new Vue({
+        el: "#app",
+        router: router,
+        data() {
+            return {
+                authstatus: false,
+                user: {},
+                urls: {
+                    authget: "app/api/auth",
+                    authpost: "app/api/auth",
+                    getusers: "app/api/users/list",
+                    changeUserData: "app/api/users/update",
+                    deleteUser: "app/api/users/delete",
+                    exit: "app/api/users/exit",
+                },
+            };
+        },
+        methods: {
+            setAuthStatus(data) {
+
+                this.authstatus = data.status;
+                this.user.id = data.user.user_id;
+                this.user.roles = data.user.roles.split(',');
+
+                if (this.authstatus) {
+
+                    if (this.isAdmin()) {
+                        router.push({name: 'admin', params: {user: this.user}});
+                    } else {
+                        router.push({name: 'user', params: {user: this.user}});
+                    }
+                }
+
+            },
+            isAdmin() {
+                return this.user.roles.some((e) => {
+                    if (+e == 1) return true;
+                })
+            }
+        },
+
+    });
+</script>
+</body>
+</html>
